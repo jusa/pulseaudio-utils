@@ -14,8 +14,15 @@ DEVICE_IFACE = "org.PulseAudio.Core1.Device"
 MAINVOLUME_NAME = "module-nokia-mainvolume"
 MAINVOLUME_PATH = "/com/meego/mainvolume1"
 MAINVOLUME_IFACE = "com.Nokia.MainVolume1"
-MEMBER = "StepsUpdated"
-MAINVOLUME_SIGNAL = MAINVOLUME_IFACE + "." + MEMBER
+MEMBER_STEPS = "StepsUpdated"
+MEMBER_HIGH_VOLUME = "NotifyHighVolume"
+MEMBER_TIMER = "NotifyListeningTime"
+MEMBER_CALL = "CallStatus"
+MEMBERS = [ MEMBER_STEPS, MEMBER_HIGH_VOLUME, MEMBER_TIMER, MEMBER_CALL ]
+MAINVOLUME_SIGNAL = MAINVOLUME_IFACE + "." + MEMBER_STEPS
+MAINVOLUME_HIGH_VOLUME = MAINVOLUME_IFACE + "." + MEMBER_HIGH_VOLUME
+MAINVOLUME_TIMER = MAINVOLUME_IFACE + "." + MEMBER_TIMER
+MAINVOLUME_CALL = MAINVOLUME_IFACE + "." + MEMBER_CALL
 MIN_VOL = 0
 MAX_VOL = 65535
 
@@ -55,10 +62,20 @@ def signal_cb(*args, **keywords):
 
     s = keywords["msg"]
 
-    if s.get_path() == MAINVOLUME_PATH \
-            and s.get_interface() == MAINVOLUME_IFACE \
-            and s.get_member() == MEMBER:
+    path = s.get_path()
+    iface = s.get_interface()
+    member = s.get_member()
 
+    if path != MAINVOLUME_PATH \
+            or iface != MAINVOLUME_IFACE \
+            or not member in MEMBERS:
+        # This code should not get executed, except when the connection dies
+        # (pulseaudio exits or something), in which case we get
+        # a org.freedesktop.DBus.Local.Disconnected signal.
+        print "Unexpected signal:", s.get_path(), s.get_interface(), s.get_member()
+        return
+
+    if member == MEMBER_STEPS:
         # args[0] is current step count as dbus.UInt32
         # args[1] is current active step as dbus.UInt32
         step_count = args[0]
@@ -67,11 +84,24 @@ def signal_cb(*args, **keywords):
         # Print the new steps with fancy formatting.
         print "StepsUpdated: Step count %d current step %d" % (step_count, current_step)
 
-    else:
-        # This code should not get executed, except when the connection dies
-        # (pulseaudio exits or something), in which case we get
-        # a org.freedesktop.DBus.Local.Disconnected signal.
-        print "Unexpected signal:", s.get_path(), s.get_interface(), s.get_member()
+    if member == MEMBER_HIGH_VOLUME:
+        # args[0] is safe step as dbus.UInt32
+        safe_step = args[0]
+
+        print "NotifyHighVolume: Safe step %d" % safe_step
+
+    if member == MEMBER_TIMER:
+        # args[0] is listening time in minutes as dbus.UInt32
+        listening_time = args[0]
+
+        print "NotifyListeningTime: Time listened %d" % listening_time
+
+    if member == MEMBER_CALL:
+        # args[0] is current call status as dbus.String
+        call_status = args[0]
+
+        print "CallStatus: Current call status %s" % call_status
+
 
 def monitor():
     # We integrate with the GLib main loop implementation. That's the easiest way
@@ -94,7 +124,8 @@ def monitor():
     # The server won't send us any signals unless we explicitly tell it to send
     # them. Here we tell the server that we'd like to receive the StepsUpdated
     # signals.
-    core.ListenForSignal(MAINVOLUME_SIGNAL, [MAINVOLUME_PATH], dbus_interface=CORE_IFACE)
+    for m in MEMBERS:
+        core.ListenForSignal(MAINVOLUME_IFACE + "." + m, [MAINVOLUME_PATH], dbus_interface=CORE_IFACE)
 
     # Run forever, waiting for the signals to come.
     loop = gobject.MainLoop()
