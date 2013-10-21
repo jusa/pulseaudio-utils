@@ -11,9 +11,9 @@ import gobject
 CORE_PATH = "/org/pulseaudio/core1"
 CORE_IFACE = "org.PulseAudio.Core1"
 DEVICE_IFACE = "org.PulseAudio.Core1.Device"
-MAINVOLUME_NAME = "module-nokia-mainvolume"
-MAINVOLUME_PATH = "/com/meego/mainvolume1"
-MAINVOLUME_IFACE = "com.Nokia.MainVolume1"
+MAINVOLUME_PATH = "/com/meego/mainvolume2"
+MAINVOLUME_IFACE = "com.Meego.MainVolume2"
+METHOD_ALL = "GetAll"
 MEMBER_STEPS = "StepsUpdated"
 MEMBER_HIGH_VOLUME = "NotifyHighVolume"
 MEMBER_TIMER = "NotifyListeningTime"
@@ -42,6 +42,14 @@ def pulse_connection():
         address = server_lookup.Get("org.PulseAudio.ServerLookup1", "Address", dbus_interface="org.freedesktop.DBus.Properties")
 
     return dbus.connection.Connection(address)
+
+def getall():
+    connection = pulse_connection()
+    proxy = connection.get_object(object_path=MAINVOLUME_PATH)
+    prop = dbus.Interface(proxy, dbus_interface=dbus.PROPERTIES_IFACE)
+    for k in prop.GetAll(MAINVOLUME_IFACE):
+        print "%s: %u " % (k, prop.Get(MAINVOLUME_IFACE, k)),
+    print ""
 
 def getstep():
     connection = pulse_connection()
@@ -137,6 +145,7 @@ def main():
         return
 
     if sys.argv[1] == "monitor":
+        getall()
         monitor()
     elif sys.argv[1] == "get":
         getstep()
