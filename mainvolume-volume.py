@@ -6,7 +6,7 @@ import os
 import sys
 
 from dbus.mainloop.glib import DBusGMainLoop
-import gobject
+from gi.repository import GObject as gobject
 
 CORE_PATH = "/org/pulseaudio/core1"
 CORE_IFACE = "org.PulseAudio.Core1"
@@ -27,11 +27,11 @@ MIN_VOL = 0
 MAX_VOL = 65535
 
 def print_help():
-    print "%s Usage:" % sys.argv[0]
-    print "     monitor         Monitor Mainvolume step changes"
-    print "     get             Get current step value"
-    print "     set <VALUE>     Set new step value"
-    print ""
+    print("%s Usage:" % sys.argv[0])
+    print("     monitor         Monitor Mainvolume step changes")
+    print("     get             Get current step value")
+    print("     set <VALUE>     Set new step value")
+    print("")
 
 def pulse_connection():
     if 'PULSE_DBUS_SERVER' in os.environ:
@@ -48,15 +48,15 @@ def getall():
     proxy = connection.get_object(object_path=MAINVOLUME_PATH)
     prop = dbus.Interface(proxy, dbus_interface=dbus.PROPERTIES_IFACE)
     for k in prop.GetAll(MAINVOLUME_IFACE):
-        print "%s: %u " % (k, prop.Get(MAINVOLUME_IFACE, k)),
-    print ""
+        print("%s: %u " % (k, prop.Get(MAINVOLUME_IFACE, k)), end="")
+    print("")
 
 def getstep():
     connection = pulse_connection()
     proxy = connection.get_object(object_path=MAINVOLUME_PATH)
     prop = dbus.Interface(proxy, dbus_interface=dbus.PROPERTIES_IFACE)
-    print "StepCount", prop.Get(MAINVOLUME_IFACE, "StepCount")
-    print "CurrentStep", prop.Get(MAINVOLUME_IFACE, "CurrentStep")
+    print("StepCount", prop.Get(MAINVOLUME_IFACE, "StepCount"))
+    print("CurrentStep", prop.Get(MAINVOLUME_IFACE, "CurrentStep"))
 
 def setstep(stepvalue):
     connection = pulse_connection()
@@ -80,7 +80,7 @@ def signal_cb(*args, **keywords):
         # This code should not get executed, except when the connection dies
         # (pulseaudio exits or something), in which case we get
         # a org.freedesktop.DBus.Local.Disconnected signal.
-        print "Unexpected signal:", s.get_path(), s.get_interface(), s.get_member()
+        print("Unexpected signal:", s.get_path(), s.get_interface(), s.get_member())
         return
 
     if member == MEMBER_STEPS:
@@ -90,25 +90,25 @@ def signal_cb(*args, **keywords):
         current_step = args[1]
 
         # Print the new steps with fancy formatting.
-        print "StepsUpdated: Step count %d current step %d" % (step_count, current_step)
+        print("StepsUpdated: Step count %d current step %d" % (step_count, current_step))
 
     if member == MEMBER_HIGH_VOLUME:
         # args[0] is safe step as dbus.UInt32
         safe_step = args[0]
 
-        print "NotifyHighVolume: Safe step %d" % safe_step
+        print("NotifyHighVolume: Safe step %d" % safe_step)
 
     if member == MEMBER_TIMER:
         # args[0] is listening time in minutes as dbus.UInt32
         listening_time = args[0]
 
-        print "NotifyListeningTime: Time listened %d" % listening_time
+        print("NotifyListeningTime: Time listened %d" % listening_time)
 
     if member == MEMBER_CALL:
         # args[0] is current call status as dbus.String
         call_status = args[0]
 
-        print "CallStatus: Current call status %s" % call_status
+        print("CallStatus: Current call status %s" % call_status)
 
 
 def monitor():
