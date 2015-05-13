@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import dbus
 from dbus.types import *
@@ -18,11 +18,13 @@ MEMBER_STEPS = "StepsUpdated"
 MEMBER_HIGH_VOLUME = "NotifyHighVolume"
 MEMBER_TIMER = "NotifyListeningTime"
 MEMBER_CALL = "CallStatus"
-MEMBERS = [ MEMBER_STEPS, MEMBER_HIGH_VOLUME, MEMBER_TIMER, MEMBER_CALL ]
+MEMBER_MEDIA = "MediaState"
+MEMBERS = [ MEMBER_STEPS, MEMBER_HIGH_VOLUME, MEMBER_TIMER, MEMBER_CALL, MEMBER_MEDIA ]
 MAINVOLUME_SIGNAL = MAINVOLUME_IFACE + "." + MEMBER_STEPS
 MAINVOLUME_HIGH_VOLUME = MAINVOLUME_IFACE + "." + MEMBER_HIGH_VOLUME
 MAINVOLUME_TIMER = MAINVOLUME_IFACE + "." + MEMBER_TIMER
 MAINVOLUME_CALL = MAINVOLUME_IFACE + "." + MEMBER_CALL
+MAINVOLUME_CALL = MAINVOLUME_IFACE + "." + MEMBER_MEDIA
 MIN_VOL = 0
 MAX_VOL = 65535
 
@@ -48,7 +50,7 @@ def getall():
     proxy = connection.get_object(object_path=MAINVOLUME_PATH)
     prop = dbus.Interface(proxy, dbus_interface=dbus.PROPERTIES_IFACE)
     for k in prop.GetAll(MAINVOLUME_IFACE):
-        print("%s: %u " % (k, prop.Get(MAINVOLUME_IFACE, k)), end="")
+        print("%s: %s " % (k, prop.Get(MAINVOLUME_IFACE, k)), end="")
     print("")
 
 def getstep():
@@ -109,6 +111,12 @@ def signal_cb(*args, **keywords):
         call_status = args[0]
 
         print("CallStatus: Current call status %s" % call_status)
+
+    if member == MEMBER_MEDIA:
+        # args[0] is current media playing status as dbus.String
+        media_state = args[0]
+
+        print("MediaState: Current media playing status is %s" % media_state)
 
 
 def monitor():
