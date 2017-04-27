@@ -17,7 +17,7 @@ METHOD_ALL = "GetAll"
 MEMBER_STEPS = "StepsUpdated"
 MEMBER_HIGH_VOLUME = "NotifyHighVolume"
 MEMBER_TIMER = "NotifyListeningTime"
-MEMBER_CALL = "CallStatus"
+MEMBER_CALL = "CallState"
 MEMBER_MEDIA = "MediaStateChanged"
 MEMBERS = [ MEMBER_STEPS, MEMBER_HIGH_VOLUME, MEMBER_TIMER, MEMBER_CALL, MEMBER_MEDIA ]
 MAINVOLUME_SIGNAL = MAINVOLUME_IFACE + "." + MEMBER_STEPS
@@ -92,31 +92,31 @@ def signal_cb(*args, **keywords):
         current_step = args[1]
 
         # Print the new steps with fancy formatting.
-        print("StepsUpdated: Step count %d current step %d" % (step_count, current_step))
+        print("%s: Step count %d current step %d" % (MEMBER_STEPS, step_count, current_step))
 
     if member == MEMBER_HIGH_VOLUME:
         # args[0] is safe step as dbus.UInt32
         safe_step = args[0]
 
-        print("NotifyHighVolume: Safe step %d" % safe_step)
+        print("%s: Safe step %d" % (MEMBER_HIGH_VOLUME, safe_step))
 
     if member == MEMBER_TIMER:
         # args[0] is listening time in minutes as dbus.UInt32
         listening_time = args[0]
 
-        print("NotifyListeningTime: Time listened %d" % listening_time)
+        print("%s: Time listened %d" % (MEMBER_TIMER, listening_time))
 
     if member == MEMBER_CALL:
         # args[0] is current call status as dbus.String
         call_status = args[0]
 
-        print("CallStatus: Current call status %s" % call_status)
+        print("%s: Current call status %s" % (MEMBER_CALL, call_status))
 
     if member == MEMBER_MEDIA:
         # args[0] is current media playing status as dbus.String
         media_state = args[0]
 
-        print("MediaState: Current media playing status is %s" % media_state)
+        print("%s: Current media playing status is %s" % (MEMBER_MEDIA, media_state))
 
 
 def monitor():
