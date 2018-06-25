@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import dbus
 from dbus.types import *
@@ -15,12 +15,12 @@ MAX_VOL = 65535
 
 
 def print_help():
-    print "Usage %s all/get/set" % sys.argv[0]
-    print ""
-    print "all                 - print all entries"
-    print "get <name>          - print entry by name"
-    print "set <name> <volume> - set volume for entry, volume limits %d - %d" % (MIN_VOL, MAX_VOL)
-    print ""
+    print("Usage %s all/get/set" % sys.argv[0])
+    print("")
+    print("all                 - print all entries")
+    print("get <name>          - print entry by name")
+    print("set <name> <volume> - set volume for entry, volume limits %d - %d" % (MIN_VOL, MAX_VOL))
+    print("")
 
 def pulse_connection():
     if 'PULSE_DBUS_SERVER' in os.environ:
@@ -36,25 +36,24 @@ def print_entry(conn, entry_path):
     entry = conn.get_object(object_path=entry_path)
     p = dbus.Interface(entry, dbus_interface=dbus.PROPERTIES_IFACE)
     ifentry = STREAM_RESTORE_IFACE + ".RestoreEntry"
-    print p.Get(ifentry, "Name"),
-    print "(%s)" % p.Get(ifentry, "Device")
+    print("%s (%s)" % (p.Get(ifentry, "Name"), p.Get(ifentry, "Device")))
     volumes = p.Get(ifentry, "Volume")
     if len(volumes) == 0:
-        print "(no volume entry)",
+        print("(no volume entry)", end="")
     else:
-        print "Mute:",
+        print("Mute: ", end="")
         if p.Get(ifentry, "Mute"):
-            print "on",
+            print("on", end="")
         else:
-            print "off",
+            print("off", end="")
     for v in volumes:
         if v[0] == 0:
-            print "Mono:", v[1],
+            print(" Mono:", v[1], end="")
         if v[0] == 1:
-            print "Front left:", v[1],
+            print(" Front left:", v[1], end="")
         if v[0] == 2:
-            print "Front right:", v[1],
-    print ""
+            print(" Front right:", v[1], end="")
+    print("")
 
 def get_all(conn):
     proxy = conn.get_object(object_path=STREAM_RESTORE_PATH)
